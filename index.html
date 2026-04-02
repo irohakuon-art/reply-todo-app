@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>返信管理アプリ</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #e0dbd2;
+    --text: #1a1814;
+    --text2: #6b6660;
+    --text3: #a09990;
+    --accent: #2d6a4f;
+    --accent-light: #e8f3ee;
+    --accent-text: #1b4332;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
+    --warning: #b7791f;
+    --warning-light: #fef9ec;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  body {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 16px;
+  }
+
+  header h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .auth-chip {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .auth-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .auth-chip.ok { background: var(--accent-light); border-color: var(--accent); color: var(--accent-text); }
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+  .dot.ok { background: var(--accent); }
+
+  .main { max-width: 520px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .chip {
+    padding: 7px 16px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip.selected { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .friend-chip {
+    padding: 7px 12px 7px 16px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 500;
+  }
+  .friend-chip:hover { border-color: var(--accent); }
+  .friend-chip.selected { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .del-btn {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.12);
+    color: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+    font-family: inherit;
+    transition: background 0.1s;
+  }
+  .del-btn:hover { background: rgba(0,0,0,0.25); }
+
+  .input-row { display: flex; gap: 8px; }
+
+  input[type="text"] {
+    flex: 1;
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.15s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); background: var(--surface); }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .btn-primary:hover { opacity: 0.88; color: white; border-color: var(--accent); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .preview {
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent-text);
+    min-height: 52px;
+    display: flex; align-items: center;
+    margin-bottom: 12px;
+    letter-spacing: 0.02em;
+  }
+  .preview.empty { font-size: 13px; font-weight: 400; color: var(--text3); background: var(--surface2); border-color: var(--border); }
+
+  .status {
+    font-size: 12px;
+    min-height: 20px;
+    margin-top: 8px;
+    text-align: center;
+  }
+  .status.ok { color: var(--accent); }
+  .status.err { color: var(--danger); }
+  .status.loading { color: var(--text3); }
+
+  .todo-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .todo-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .todo-item:first-child { padding-top: 0; }
+
+  .todo-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .todo-date { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--warning-light);
+    color: var(--warning);
+    font-weight: 700;
+    margin-right: 8px;
+  }
+
+  .done-btn {
+    padding: 5px 12px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .done-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+  .empty-state {
+    text-align: center;
+    padding: 24px 0;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  .notice {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: var(--warning-light);
+    border: 1px solid #f6d860;
+    font-size: 12px;
+    color: var(--warning);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✉</div>
+  <h1>返信管理</h1>
+  <button class="auth-chip" id="auth-btn" onclick="handleAuth()">
+    <span class="dot" id="auth-dot"></span>
+    <span id="auth-label">Googleでログイン</span>
+  </button>
+</header>
+
+<div class="main">
+
+  <div class="card">
+    <div class="card-title">プラットフォーム</div>
+    <div class="chips" id="platform-row">
+      <button class="chip" onclick="selectPlatform('Discord')">Discord</button>
+      <button class="chip" onclick="selectPlatform('X DM')">X DM</button>
+      <button class="chip" onclick="selectPlatform('PBW')">PBW</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">友達を追加</div>
+    <div class="input-row">
+      <input type="text" id="friend-input" placeholder="名前を入力..." onkeydown="if(event.key==='Enter')addFriend()" />
+      <button class="btn" onclick="addFriend()">追加</button>
+    </div>
+  </div>
+
+  <div class="card" id="friend-card" style="display:none;">
+    <div class="card-title">友達を選択</div>
+    <div class="chips" id="friend-row"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">追加するタスク</div>
+    <div class="preview empty" id="preview">プラットフォームと友達を選んでください</div>
+    <button class="btn btn-primary" id="add-btn" onclick="addToTodo()" disabled>TODOに追加する</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">返信待ちリスト</div>
+    <div id="todo-list"><div class="empty-state">返信待ちはありません</div></div>
+  </div>
+
+</div>
+
+<script>
+const CLIENT_ID = '288819062533-862eqagih7uq246j1regadeehc9ipl43.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/tasks';
+const LIST_TITLE = '返信待ち';
+
+let tokenClient = null;
+let isAuthed = false;
+let selectedPlatform = '';
+let selectedFriend = '';
+let friends = JSON.parse(localStorage.getItem('reply_friends') || '[]');
+let replyListId = localStorage.getItem('reply_list_id') || '';
+let localTodos = JSON.parse(localStorage.getItem('reply_todos') || '[]');
+
+function selectPlatform(p) {
+  selectedPlatform = p;
+  document.querySelectorAll('#platform-row .chip').forEach(b => {
+    b.classList.toggle('selected', b.textContent === p);
+  });
+  updatePreview();
+}
+
+function addFriend() {
+  const inp = document.getElementById('friend-input');
+  const name = inp.value.trim();
+  if (!name || friends.includes(name)) { inp.value = ''; return; }
+  friends.push(name);
+  localStorage.setItem('reply_friends', JSON.stringify(friends));
+  inp.value = '';
+  renderFriends();
+}
+
+function removeFriend(name) {
+  friends = friends.filter(f => f !== name);
+  if (selectedFriend === name) { selectedFriend = ''; updatePreview(); }
+  localStorage.setItem('reply_friends', JSON.stringify(friends));
+  renderFriends();
+}
+
+function renderFriends() {
+  const row = document.getElementById('friend-row');
+  const card = document.getElementById('friend-card');
+  card.style.display = friends.length ? '' : 'none';
+  row.innerHTML = friends.map(f => `
+    <button class="friend-chip${selectedFriend===f?' selected':''}" onclick="selectFriend('${f}')">
+      ${f}
+      <button class="del-btn" onclick="event.stopPropagation();removeFriend('${f}')">✕</button>
+    </button>
+  `).join('');
+}
+
+function selectFriend(f) {
+  selectedFriend = f;
+  renderFriends();
+  updatePreview();
+}
+
+function updatePreview() {
+  const p = document.getElementById('preview');
+  const btn = document.getElementById('add-btn');
+  if (selectedPlatform && selectedFriend) {
+    p.textContent = selectedPlatform + ' / ' + selectedFriend;
+    p.classList.remove('empty');
+    btn.disabled = false;
+  } else {
+    p.textContent = 'プラットフォームと友達を選んでください';
+    p.classList.add('empty');
+    btn.disabled = true;
+  }
+}
+
+function setStatus(msg, type) {
+  const s = document.getElementById('status');
+  s.textContent = msg;
+  s.className = 'status ' + (type || '');
+}
+
+async function addToTodo() {
+  const title = selectedPlatform + ' / ' + selectedFriend;
+  if (!selectedPlatform || !selectedFriend) return;
+  if (isAuthed) {
+    await addToGoogleTasks(title);
+  } else {
+    addLocalTodo(title);
+  }
+  selectedFriend = '';
+  renderFriends();
+  updatePreview();
+}
+
+function addLocalTodo(title) {
+  const item = { id: Date.now(), title, date: new Date().toLocaleDateString('ja-JP') };
+  localTodos.unshift(item);
+  localStorage.setItem('reply_todos', JSON.stringify(localTodos));
+  renderTodos();
+  setStatus('追加しました（ローカル保存）', 'ok');
+}
+
+function renderTodos() {
+  const list = document.getElementById('todo-list');
+  const data = isAuthed ? [] : localTodos;
+  if (!data.length && !isAuthed) {
+    list.innerHTML = '<div class="empty-state">返信待ちはありません</div>';
+    return;
+  }
+  if (!isAuthed) {
+    list.innerHTML = localTodos.map(t => `
+      <div class="todo-item">
+        <div>
+          <div class="todo-title">${t.title}</div>
+          <div class="todo-date">${t.date}</div>
+        </div>
+        <div style="display:flex;align-items:center;">
+          <span class="badge">返信待ち</span>
+          <button class="done-btn" onclick="removeTodo(${t.id})">完了</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function removeTodo(id) {
+  localTodos = localTodos.filter(t => t.id !== id);
+  localStorage.setItem('reply_todos', JSON.stringify(localTodos));
+  renderTodos();
+}
+
+async function handleAuth() {
+  if (!window.google || !window.gapi) {
+    setStatus('Google APIを読み込み中...', 'loading');
+    setTimeout(handleAuth, 800);
+    return;
+  }
+  if (!tokenClient) {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) { setStatus('ログイン失敗: ' + resp.error, 'err'); return; }
+        isAuthed = true;
+        document.getElementById('auth-dot').className = 'dot ok';
+        document.getElementById('auth-label').textContent = '接続済み';
+        document.getElementById('auth-btn').className = 'auth-chip ok';
+        await ensureList();
+        await loadTasks();
+      }
+    });
+  }
+  tokenClient.requestAccessToken();
+}
+
+async function ensureList() {
+  const res = await gapi.client.tasks.tasklists.list();
+  const lists = res.result.items || [];
+  const existing = lists.find(l => l.title === LIST_TITLE);
+  if (existing) {
+    replyListId = existing.id;
+  } else {
+    const created = await gapi.client.tasks.tasklists.insert({ resource: { title: LIST_TITLE } });
+    replyListId = created.result.id;
+  }
+  localStorage.setItem('reply_list_id', replyListId);
+}
+
+async function addToGoogleTasks(title) {
+  setStatus('追加中...', 'loading');
+  try {
+    await gapi.client.tasks.tasks.insert({
+      tasklist: replyListId,
+      resource: { title, notes: '返信管理アプリから追加' }
+    });
+    setStatus('Google ToDoに追加しました！', 'ok');
+    await loadTasks();
+  } catch(e) {
+    setStatus('エラー: ' + (e.result?.error?.message || e), 'err');
+  }
+}
+
+async function loadTasks() {
+  try {
+    const res = await gapi.client.tasks.tasks.list({ tasklist: replyListId, showCompleted: false });
+    const tasks = (res.result.items || []).filter(t => t.status !== 'completed');
+    const list = document.getElementById('todo-list');
+    if (!tasks.length) {
+      list.innerHTML = '<div class="empty-state">返信待ちはありません</div>';
+      return;
+    }
+    list.innerHTML = tasks.map(t => `
+      <div class="todo-item">
+        <div>
+          <div class="todo-title">${t.title}</div>
+        </div>
+        <div style="display:flex;align-items:center;">
+          <span class="badge">返信待ち</span>
+          <button class="done-btn" onclick="completeTask('${t.id}')">完了</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function completeTask(id) {
+  try {
+    await gapi.client.tasks.tasks.patch({
+      tasklist: replyListId,
+      task: id,
+      resource: { status: 'completed' }
+    });
+    await loadTasks();
+  } catch(e) {}
+}
+
+window.gapiLoaded = function() {
+  gapi.load('client', async () => {
+    await gapi.client.init({});
+    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest');
+  });
+};
+
+renderFriends();
+renderTodos();
+</script>
+
+<script src="https://apis.google.com/js/api.js?onload=gapiLoaded"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+
+</body>
+</html>
