@@ -4,545 +4,435 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>返信管理アプリ</title>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://apis.google.com/js/api.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f5f3ee;
-    --surface: #ffffff;
-    --surface2: #f0ede8;
-    --border: #e0dbd2;
-    --text: #1a1814;
-    --text2: #6b6660;
-    --text3: #a09990;
-    --accent: #2d6a4f;
-    --accent-light: #e8f3ee;
-    --accent-text: #1b4332;
-    --danger: #c0392b;
-    --danger-light: #fdecea;
-    --warning: #b7791f;
-    --warning-light: #fef9ec;
-    --radius: 10px;
-    --radius-lg: 16px;
+    --bg: #0f0f13;
+    --surface: #1a1a22;
+    --surface2: #22222e;
+    --border: #2e2e3e;
+    --accent: #7c6af7;
+    --accent2: #b06af7;
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --green: #4ade80;
+    --red: #f87171;
   }
-
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
     background: var(--bg);
     color: var(--text);
+    font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
     min-height: 100vh;
-    padding: 0;
+    padding: 16px;
   }
-
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 18px 24px;
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    gap: 8px;
   }
+  h1::before { content: '✉'; font-size: 16px; }
 
-  .logo {
-    width: 32px; height: 32px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    color: white;
-    font-size: 16px;
-  }
-
-  header h1 {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
-
-  .auth-chip {
-    margin-left: auto;
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 14px;
-    border-radius: 99px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    font-size: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    color: var(--text2);
-    transition: all 0.15s;
-  }
-  .auth-chip:hover { border-color: var(--accent); color: var(--accent); }
-  .auth-chip.ok { background: var(--accent-light); border-color: var(--accent); color: var(--accent-text); }
-
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
-  .dot.ok { background: var(--accent); }
-
-  .main { max-width: 520px; margin: 0 auto; padding: 24px 16px 80px; }
-
-  .card {
+  /* ログインエリア */
+  #login-area {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 12px;
     padding: 20px;
+    text-align: center;
     margin-bottom: 16px;
   }
+  #login-area p { color: var(--text2); font-size: 13px; margin-bottom: 12px; }
 
-  .card-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text3);
-    margin-bottom: 14px;
-  }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-
-  .chip {
-    padding: 7px 16px;
-    border-radius: 99px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-weight: 500;
-  }
-  .chip:hover { border-color: var(--accent); }
-  .chip.selected { background: var(--accent); border-color: var(--accent); color: white; }
-
-  .friend-chip {
-    padding: 7px 12px 7px 16px;
-    border-radius: 99px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex; align-items: center; gap: 6px;
-    font-weight: 500;
-  }
-  .friend-chip:hover { border-color: var(--accent); }
-  .friend-chip.selected { background: var(--accent); border-color: var(--accent); color: white; }
-
-  .del-btn {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(0,0,0,0.12);
-    color: inherit;
-    font-size: 11px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    line-height: 1;
-    font-family: inherit;
-    transition: background 0.1s;
-  }
-  .del-btn:hover { background: rgba(0,0,0,0.25); }
-
-  .input-row { display: flex; gap: 8px; }
-
-  input[type="text"] {
-    flex: 1;
-    padding: 9px 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text);
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: border 0.15s;
-  }
-  input[type="text"]:focus { border-color: var(--accent); background: var(--surface); }
-
+  /* ボタン共通 */
   .btn {
-    padding: 9px 18px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
     font-size: 13px;
     font-family: inherit;
-    font-weight: 500;
-    cursor: pointer;
+    padding: 8px 14px;
     transition: all 0.15s;
+    font-weight: 500;
   }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-
   .btn-primary {
     background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    width: 100%;
-    padding: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    margin-top: 4px;
+    color: #fff;
   }
-  .btn-primary:hover { opacity: 0.88; color: white; border-color: var(--accent); }
-  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  .preview {
-    padding: 14px 18px;
-    border-radius: var(--radius);
-    background: var(--accent-light);
-    border: 1px solid var(--accent);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent-text);
-    min-height: 52px;
-    display: flex; align-items: center;
-    margin-bottom: 12px;
-    letter-spacing: 0.02em;
-  }
-  .preview.empty { font-size: 13px; font-weight: 400; color: var(--text3); background: var(--surface2); border-color: var(--border); }
-
-  .status {
-    font-size: 12px;
-    min-height: 20px;
-    margin-top: 8px;
-    text-align: center;
-  }
-  .status.ok { color: var(--accent); }
-  .status.err { color: var(--danger); }
-  .status.loading { color: var(--text3); }
-
-  .todo-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .todo-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .todo-item:first-child { padding-top: 0; }
-
-  .todo-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .todo-date { font-size: 11px; color: var(--text3); margin-top: 2px; }
-
-  .badge {
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 99px;
-    background: var(--warning-light);
-    color: var(--warning);
-    font-weight: 700;
-    margin-right: 8px;
-  }
-
-  .done-btn {
-    padding: 5px 12px;
-    border-radius: 99px;
-    border: 1px solid var(--border);
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-ghost {
     background: var(--surface2);
     color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+  /* セクション */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ワンタップボタングループ */
+  .quick-group { margin-bottom: 12px; }
+  .quick-label {
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .quick-label span { font-size: 13px; }
+  .quick-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .quick-btn {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--text);
     font-size: 12px;
-    font-family: inherit;
+    padding: 5px 12px;
     cursor: pointer;
+    font-family: inherit;
     transition: all 0.15s;
     white-space: nowrap;
   }
-  .done-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
-
-  .empty-state {
-    text-align: center;
-    padding: 24px 0;
-    color: var(--text3);
-    font-size: 13px;
+  .quick-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,106,247,0.1);
+  }
+  .quick-btn.pbw {
+    border-color: rgba(176,106,247,0.4);
+    color: #c49af7;
+  }
+  .quick-btn.pbw:hover {
+    border-color: var(--accent2);
+    background: rgba(176,106,247,0.1);
   }
 
-  .notice {
+  /* プレビュー */
+  #preview-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
     padding: 10px 14px;
-    border-radius: var(--radius);
-    background: var(--warning-light);
-    border: 1px solid #f6d860;
-    font-size: 12px;
-    color: var(--warning);
-    margin-bottom: 14px;
-    line-height: 1.6;
+    margin: 12px 0;
+    font-size: 13px;
+    color: var(--text2);
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+  #preview-box.ready { color: var(--text); border-color: var(--accent); }
+  #preview-title { flex: 1; }
+  #preview-detail { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* 詳細入力 */
+  .detail-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .detail-row label { font-size: 12px; color: var(--text2); min-width: 40px; }
+  .detail-row input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 12px;
+    padding: 6px 10px;
+    font-family: inherit;
+  }
+  .detail-row input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .detail-row input::placeholder { color: var(--text2); }
+
+  /* 追加ボタン */
+  #add-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 8px;
+    margin-top: 4px;
+  }
+
+  /* リスト */
+  .todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-check {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .todo-check:hover { border-color: var(--green); background: rgba(74,222,128,0.1); }
+  .todo-body { flex: 1; }
+  .todo-title { font-size: 13px; line-height: 1.4; }
+  .todo-detail { font-size: 11px; color: var(--text2); margin-top: 2px; word-break: break-all; }
+  .todo-del {
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .todo-del:hover { color: var(--red); }
+
+  .empty { color: var(--text2); font-size: 13px; text-align: center; padding: 16px 0; }
+
+  /* ステータス */
+  #status {
+    font-size: 11px;
+    color: var(--text2);
+    text-align: center;
+    padding: 4px 0;
+    min-height: 20px;
+  }
+  #status.ok { color: var(--green); }
+  #status.err { color: var(--red); }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">✉</div>
-  <h1>返信管理</h1>
-  <button class="auth-chip" id="auth-btn" onclick="handleAuth()">
-    <span class="dot" id="auth-dot"></span>
-    <span id="auth-label">Googleでログイン</span>
-  </button>
-</header>
+<h1>返信管理</h1>
 
-<div class="main">
+<!-- ログインエリア -->
+<div id="login-area">
+  <p>Google Tasksと連携するにはログインしてください</p>
+  <button class="btn btn-primary" onclick="handleAuth()">Googleでログイン</button>
+</div>
 
-  <div class="card">
-    <div class="card-title">プラットフォーム</div>
-    <div class="chips" id="platform-row">
-      <button class="chip" onclick="selectPlatform('Discord')">Discord</button>
-      <button class="chip" onclick="selectPlatform('X DM')">X DM</button>
-      <button class="chip" onclick="selectPlatform('PBW')">PBW</button>
+<!-- メインUI（ログイン後表示） -->
+<div id="main-ui" style="display:none">
+
+  <!-- ワンタップ追加 -->
+  <div class="section">
+    <div class="section-title">ワンタップ追加</div>
+
+    <div class="quick-group">
+      <div class="quick-label"><span>💬</span> Discord</div>
+      <div class="quick-buttons">
+        <button class="quick-btn" onclick="quickAdd('Discord','桃桜')">桃桜</button>
+        <button class="quick-btn" onclick="quickAdd('Discord','ぺぃっさん')">ぺぃっさん</button>
+        <button class="quick-btn" onclick="quickAdd('Discord','いすゞ')">いすゞ</button>
+        <button class="quick-btn" onclick="quickAdd('Discord','からあげ')">からあげ</button>
+        <button class="quick-btn" onclick="quickAdd('Discord','源さん')">源さん</button>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="card-title">友達を追加</div>
-    <div class="input-row">
-      <input type="text" id="friend-input" placeholder="名前を入力..." onkeydown="if(event.key==='Enter')addFriend()" />
-      <button class="btn" onclick="addFriend()">追加</button>
+    <div class="quick-group">
+      <div class="quick-label"><span>🐦</span> X DM</div>
+      <div class="quick-buttons">
+        <button class="quick-btn" onclick="quickAdd('X DM','みょんズ')">みょんズ</button>
+        <button class="quick-btn" onclick="quickAdd('X DM','みこち')">みこち</button>
+        <button class="quick-btn" onclick="quickAdd('X DM','てあるさん')">てあるさん</button>
+      </div>
     </div>
+
+    <div class="quick-group">
+      <div class="quick-label"><span>🎮</span> PBW</div>
+      <div class="quick-buttons">
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','凛櫻','https://tw7.t-walker.jp/gallery/request/complete/?as_character=g00518&order_id=1334766')">凛櫻</button>
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','アネモネ','https://tw6.jp/garage/item?as_character=f25656&character_id=f25656')">アネモネ</button>
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','ポン子','https://tw6.jp/gallery/request/complete/?as_character=f00299&order_id=1333340')">ポン子</button>
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','キツネ','https://tw7.t-walker.jp/scenario/show?as_character=g03639&scenario_id=12872')">キツネ</button>
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','日和','https://tw8.t-walker.jp/scenario/show?as_character=h00732&scenario_id=9975')">日和</button>
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','劉麗','https://tw8.t-walker.jp/gallery/obligation/1307796?as_character=h03508')">劉麗</button>
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','Noah','https://rev2.reversion.jp/character/detail/r2p001449')">Noah</button>
+        <button class="quick-btn pbw" onclick="quickAdd('PBW','レティシア','https://rev2.reversion.jp/character/detail/r2p005010')">レティシア</button>
+      </div>
+    </div>
+
+    <!-- プレビュー & 詳細入力 -->
+    <div id="preview-box">
+      <span id="preview-title">ボタンを押すとここにプレビューされます</span>
+    </div>
+
+    <div id="detail-area" style="display:none">
+      <div class="detail-row">
+        <label>詳細</label>
+        <input type="text" id="detail-input" placeholder="URLや補足メモなど（任意）">
+      </div>
+      <button class="btn btn-primary" id="add-btn" onclick="addToTasks()">TODOに追加する</button>
+    </div>
+
+    <div id="status"></div>
   </div>
 
-  <div class="card" id="friend-card" style="display:none;">
-    <div class="card-title">友達を選択</div>
-    <div class="chips" id="friend-row"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">追加するタスク</div>
-    <div class="preview empty" id="preview">プラットフォームと友達を選んでください</div>
-    <button class="btn btn-primary" id="add-btn" onclick="addToTodo()" disabled>TODOに追加する</button>
-    <div class="status" id="status"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">返信待ちリスト</div>
-    <div id="todo-list"><div class="empty-state">返信待ちはありません</div></div>
+  <!-- 返信待ちリスト -->
+  <div class="section">
+    <div class="section-title">返信待ちリスト</div>
+    <div id="todo-list"><div class="empty">読み込み中...</div></div>
   </div>
 
 </div>
 
 <script>
-const CLIENT_ID = '288819062533-862eqagih7uq246j1regadeehc9ipl43.apps.googleusercontent.com';
+// ===== Google API設定 =====
+const CLIENT_ID = '459073551914-r77d3a39bc3ufgjkr0m1s8iq9veg8pi3.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/tasks';
-const LIST_TITLE = '返信待ち';
+const LIST_NAME = '返信待ち';
 
-let tokenClient = null;
-let isAuthed = false;
-let selectedPlatform = '';
-let selectedFriend = '';
-let friends = JSON.parse(localStorage.getItem('reply_friends') || '[]');
-let replyListId = localStorage.getItem('reply_list_id') || '';
-let localTodos = JSON.parse(localStorage.getItem('reply_todos') || '[]');
+let tokenClient;
+let listId = null;
+let pending = null; // {platform, name, url}
 
-function selectPlatform(p) {
-  selectedPlatform = p;
-  document.querySelectorAll('#platform-row .chip').forEach(b => {
-    b.classList.toggle('selected', b.textContent === p);
-  });
-  updatePreview();
-}
-
-function addFriend() {
-  const inp = document.getElementById('friend-input');
-  const name = inp.value.trim();
-  if (!name || friends.includes(name)) { inp.value = ''; return; }
-  friends.push(name);
-  localStorage.setItem('reply_friends', JSON.stringify(friends));
-  inp.value = '';
-  renderFriends();
-}
-
-function removeFriend(name) {
-  friends = friends.filter(f => f !== name);
-  if (selectedFriend === name) { selectedFriend = ''; updatePreview(); }
-  localStorage.setItem('reply_friends', JSON.stringify(friends));
-  renderFriends();
-}
-
-function renderFriends() {
-  const row = document.getElementById('friend-row');
-  const card = document.getElementById('friend-card');
-  card.style.display = friends.length ? '' : 'none';
-  row.innerHTML = friends.map(f => `
-    <button class="friend-chip${selectedFriend===f?' selected':''}" onclick="selectFriend('${f}')">
-      ${f}
-      <button class="del-btn" onclick="event.stopPropagation();removeFriend('${f}')">✕</button>
-    </button>
-  `).join('');
-}
-
-function selectFriend(f) {
-  selectedFriend = f;
-  renderFriends();
-  updatePreview();
-}
-
-function updatePreview() {
-  const p = document.getElementById('preview');
-  const btn = document.getElementById('add-btn');
-  if (selectedPlatform && selectedFriend) {
-    p.textContent = selectedPlatform + ' / ' + selectedFriend;
-    p.classList.remove('empty');
-    btn.disabled = false;
-  } else {
-    p.textContent = 'プラットフォームと友達を選んでください';
-    p.classList.add('empty');
-    btn.disabled = true;
-  }
-}
-
-function setStatus(msg, type) {
-  const s = document.getElementById('status');
-  s.textContent = msg;
-  s.className = 'status ' + (type || '');
-}
-
-async function addToTodo() {
-  const title = selectedPlatform + ' / ' + selectedFriend;
-  if (!selectedPlatform || !selectedFriend) return;
-  if (isAuthed) {
-    await addToGoogleTasks(title);
-  } else {
-    addLocalTodo(title);
-  }
-  selectedFriend = '';
-  renderFriends();
-  updatePreview();
-}
-
-function addLocalTodo(title) {
-  const item = { id: Date.now(), title, date: new Date().toLocaleDateString('ja-JP') };
-  localTodos.unshift(item);
-  localStorage.setItem('reply_todos', JSON.stringify(localTodos));
-  renderTodos();
-  setStatus('追加しました（ローカル保存）', 'ok');
-}
-
-function renderTodos() {
-  const list = document.getElementById('todo-list');
-  const data = isAuthed ? [] : localTodos;
-  if (!data.length && !isAuthed) {
-    list.innerHTML = '<div class="empty-state">返信待ちはありません</div>';
-    return;
-  }
-  if (!isAuthed) {
-    list.innerHTML = localTodos.map(t => `
-      <div class="todo-item">
-        <div>
-          <div class="todo-title">${t.title}</div>
-          <div class="todo-date">${t.date}</div>
-        </div>
-        <div style="display:flex;align-items:center;">
-          <span class="badge">返信待ち</span>
-          <button class="done-btn" onclick="removeTodo(${t.id})">完了</button>
-        </div>
-      </div>
-    `).join('');
-  }
-}
-
-function removeTodo(id) {
-  localTodos = localTodos.filter(t => t.id !== id);
-  localStorage.setItem('reply_todos', JSON.stringify(localTodos));
-  renderTodos();
-}
-
-async function handleAuth() {
-  if (!window.google || !window.gapi) {
-    setStatus('Google APIを読み込み中...', 'loading');
-    setTimeout(handleAuth, 800);
-    return;
-  }
-  if (!tokenClient) {
+// ===== 認証 =====
+function handleAuth() {
+  gapi.load('client', async () => {
+    await gapi.client.init({
+      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest']
+    });
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPES,
-      callback: async (resp) => {
-        if (resp.error) { setStatus('ログイン失敗: ' + resp.error, 'err'); return; }
-        isAuthed = true;
-        document.getElementById('auth-dot').className = 'dot ok';
-        document.getElementById('auth-label').textContent = '接続済み';
-        document.getElementById('auth-btn').className = 'auth-chip ok';
-        await ensureList();
-        await loadTasks();
+      callback: async (res) => {
+        if (res.error) return;
+        document.getElementById('login-area').style.display = 'none';
+        document.getElementById('main-ui').style.display = 'block';
+        listId = await getOrCreateList();
+        loadTasks();
       }
     });
-  }
-  tokenClient.requestAccessToken();
+    tokenClient.requestAccessToken();
+  });
 }
 
-async function ensureList() {
+async function getOrCreateList() {
   const res = await gapi.client.tasks.tasklists.list();
   const lists = res.result.items || [];
-  const existing = lists.find(l => l.title === LIST_TITLE);
-  if (existing) {
-    replyListId = existing.id;
-  } else {
-    const created = await gapi.client.tasks.tasklists.insert({ resource: { title: LIST_TITLE } });
-    replyListId = created.result.id;
-  }
-  localStorage.setItem('reply_list_id', replyListId);
+  const found = lists.find(l => l.title === LIST_NAME);
+  if (found) return found.id;
+  const created = await gapi.client.tasks.tasklists.insert({ resource: { title: LIST_NAME } });
+  return created.result.id;
 }
 
-async function addToGoogleTasks(title) {
-  setStatus('追加中...', 'loading');
+// ===== ワンタップ追加 =====
+function quickAdd(platform, name, url = '') {
+  pending = { platform, name, url };
+  const title = `${platform} / ${name}にレス`;
+
+  const previewEl = document.getElementById('preview-box');
+  const previewTitle = document.getElementById('preview-title');
+  previewEl.className = 'ready';
+  previewTitle.innerHTML = `<div id="preview-title">${title}</div>${url ? `<div id="preview-detail" style="font-size:11px;color:var(--text2);margin-top:2px">${url}</div>` : ''}`;
+
+  document.getElementById('detail-input').value = url;
+  document.getElementById('detail-area').style.display = 'block';
+  setStatus('');
+}
+
+// ===== Tasks追加 =====
+async function addToTasks() {
+  if (!pending) return;
+  if (!listId) { setStatus('ログインしてください', 'err'); return; }
+
+  const title = `${pending.platform} / ${pending.name}にレス`;
+  const detail = document.getElementById('detail-input').value.trim();
+
+  setStatus('追加中...');
   try {
-    await gapi.client.tasks.tasks.insert({
-      tasklist: replyListId,
-      resource: { title, notes: '返信管理アプリから追加' }
-    });
-    setStatus('Google ToDoに追加しました！', 'ok');
-    await loadTasks();
+    const resource = { title, notes: detail || '' };
+    await gapi.client.tasks.tasks.insert({ tasklist: listId, resource });
+    setStatus('✓ 追加しました', 'ok');
+    pending = null;
+    document.getElementById('preview-box').className = '';
+    document.getElementById('preview-box').innerHTML = '<span id="preview-title">ボタンを押すとここにプレビューされます</span>';
+    document.getElementById('detail-area').style.display = 'none';
+    loadTasks();
   } catch(e) {
-    setStatus('エラー: ' + (e.result?.error?.message || e), 'err');
+    setStatus('エラーが発生しました', 'err');
   }
 }
 
+// ===== タスク読み込み =====
 async function loadTasks() {
+  if (!listId) return;
   try {
-    const res = await gapi.client.tasks.tasks.list({ tasklist: replyListId, showCompleted: false });
-    const tasks = (res.result.items || []).filter(t => t.status !== 'completed');
-    const list = document.getElementById('todo-list');
+    const res = await gapi.client.tasks.tasks.list({ tasklist: listId, showCompleted: false });
+    const tasks = res.result.items || [];
+    const el = document.getElementById('todo-list');
     if (!tasks.length) {
-      list.innerHTML = '<div class="empty-state">返信待ちはありません</div>';
+      el.innerHTML = '<div class="empty">返信待ちはありません</div>';
       return;
     }
-    list.innerHTML = tasks.map(t => `
-      <div class="todo-item">
-        <div>
+    el.innerHTML = tasks.map(t => `
+      <div class="todo-item" id="task-${t.id}">
+        <div class="todo-check" onclick="completeTask('${t.id}')"></div>
+        <div class="todo-body">
           <div class="todo-title">${t.title}</div>
+          ${t.notes ? `<div class="todo-detail">${t.notes}</div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;">
-          <span class="badge">返信待ち</span>
-          <button class="done-btn" onclick="completeTask('${t.id}')">完了</button>
-        </div>
+        <button class="todo-del" onclick="deleteTask('${t.id}')">✕</button>
       </div>
     `).join('');
-  } catch(e) {}
+  } catch(e) { console.log(e); }
 }
 
 async function completeTask(id) {
   try {
-    await gapi.client.tasks.tasks.patch({
-      tasklist: replyListId,
-      task: id,
-      resource: { status: 'completed' }
-    });
-    await loadTasks();
-  } catch(e) {}
+    await gapi.client.tasks.tasks.patch({ tasklist: listId, task: id, resource: { status: 'completed' } });
+    document.getElementById('task-' + id)?.remove();
+    if (!document.querySelector('.todo-item')) {
+      document.getElementById('todo-list').innerHTML = '<div class="empty">返信待ちはありません</div>';
+    }
+  } catch(e) { console.log(e); }
 }
 
-window.gapiLoaded = function() {
-  gapi.load('client', async () => {
-    await gapi.client.init({});
-    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest');
-  });
-};
+async function deleteTask(id) {
+  try {
+    await gapi.client.tasks.tasks.delete({ tasklist: listId, task: id });
+    document.getElementById('task-' + id)?.remove();
+    if (!document.querySelector('.todo-item')) {
+      document.getElementById('todo-list').innerHTML = '<div class="empty">返信待ちはありません</div>';
+    }
+  } catch(e) { console.log(e); }
+}
 
-renderFriends();
-renderTodos();
+function setStatus(msg, type = '') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type;
+}
 </script>
-
-<script src="https://apis.google.com/js/api.js?onload=gapiLoaded"></script>
-<script src="https://accounts.google.com/gsi/client" async></script>
-
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>
